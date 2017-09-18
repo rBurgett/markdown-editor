@@ -60,16 +60,24 @@ class MarkdownEditor extends Component {
     constructor(props) {
         super(props);
 
+        const { argv } = App;
+
+        const filePath = argv.length > 0 ? argv[0].replace(/^file:\/\//, '') : '';
+        const text = filePath ? fs.readFileSync(filePath, 'utf8') : '';
+        const converted = text ? md.render(text) : '';
+        const count = countWords(text);
+        if(filePath) document.title = makeTitle(text, filePath, false);
+
         const { sans = false, size = 16 } = readConfigFile();
 
         this.state = {
-            text: '',
+            text,
             changed: false,
-            count: '',
-            converted: '',
+            count,
+            converted,
             sans,
             size,
-            filePath: '',
+            filePath,
             windowWidth: window.innerWidth,
             windowHeight: window.innerHeight,
             preview: false
