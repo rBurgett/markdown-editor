@@ -57,6 +57,7 @@
         "react"
     ],
     "globals": {
-        "$": false
+        "$": false,
+        "nw": false
     }
 }
