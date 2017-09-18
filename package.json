@@ -5,7 +5,8 @@
   "main": "index.html",
   "window": {
     "width": 600,
-    "height": 600
+    "height": 600,
+    "icon": "./images/md_icon.png"
   },
   "scripts": {
     "start": "nw .",
@@ -40,6 +41,7 @@
     "less-plugin-clean-css": "^1.5.1"
   },
   "dependencies": {
+    "fs-extra": "^4.0.2",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
     "markdown-it": "^8.4.0",

@@ -1,13 +1,18 @@
-import $ from 'jquery';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import * as _ from 'lodash';
+import { bindAll } from 'lodash';
 import MarkdownIt from 'markdown-it';
 import moment from 'moment';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 
 const { App, Menu, MenuItem, Shortcut } = nw;
+
+const dataPath = App.dataPath;
+const configFilePath = path.join(dataPath, 'config.json');
+
+const sansFont = 'PT Sans';
+const serifFont = 'PT Serif';
 
 const md = new MarkdownIt();
 
@@ -26,29 +31,51 @@ const makeTitle = (text, filePath, changed) => {
     return `${count === 1 ? `${count} word` : `${count} words`} - ${titleBarText}`;
 };
 
+const readConfigFile = () => {
+
+    fs.ensureFileSync(configFilePath);
+
+    try {
+        const data = fs.readJsonSync(configFilePath);
+        return data;
+    } catch(err) {
+        return {};
+    }
+
+};
+
+const writeConfigFile = data => {
+    fs.writeJson(configFilePath, data);
+};
+
 class MarkdownEditor extends Component {
 
     constructor(props) {
         super(props);
+
+        const { sans = false, size = 16 } = readConfigFile();
+
         this.state = {
             text: '',
             changed: false,
             count: '',
             converted: '',
-            serif: true,
-            size: 16,
+            sans,
+            size,
             filePath: '',
             windowWidth: window.innerWidth,
             windowHeight: window.innerHeight,
             preview: false
         };
-        _.bindAll(this, [
+        bindAll(this, [
             'onChange',
             'onNew',
             'onOpen',
             'onOpenInputChange',
             'onSave',
             'onSaveInputChange',
+            'openHelp',
+            'closeHelp',
             'openPreviewWindow',
             'renderPreview',
             'saveFile'
@@ -82,48 +109,100 @@ class MarkdownEditor extends Component {
 
         const fontTypeMenu = new Menu();
         fontTypeMenu.append(new MenuItem({ label: 'Serif', click: () => {
+            const { size, preview } = this.state;
+            const sans = false;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                serif: true
+                sans
             });
+            if(preview) {
+                const previewWindow = this._previewWindow;
+                const target = previewWindow.window.document.getElementById('js-main');
+                target.style.fontFamily = serifFont;
+            }
         }}));
         fontTypeMenu.append(new MenuItem({ label: 'Sans-Serif', click: () => {
+            const { size, preview } = this.state;
+            const sans = true;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                serif: false
+                sans
             });
+            if(preview) {
+                const previewWindow = this._previewWindow;
+                const target = previewWindow.window.document.getElementById('js-main');
+                target.style.fontFamily = sansFont;
+            }
         }}));
         viewMenu.append(new MenuItem({ label: 'Display Font Type', submenu: fontTypeMenu }));
 
         const fontSizeMenu = new Menu();
         fontSizeMenu.append(new MenuItem({ label: '12px', click: () => {
+            const { sans } = this.state;
+            const size = 12;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                size: 12
+                size
             });
         }}));
         fontSizeMenu.append(new MenuItem({ label: '14px', click: () => {
+            const { sans } = this.state;
+            const size = 14;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                size: 14
+                size
             });
         }}));
         fontSizeMenu.append(new MenuItem({ label: '16px (default)', click: () => {
+            const { sans } = this.state;
+            const size = 16;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
                 size: 16
             });
         }}));
         fontSizeMenu.append(new MenuItem({ label: '18px', click: () => {
+            const { sans } = this.state;
+            const size = 18;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                size: 18
+                size
             });
         }}));
         fontSizeMenu.append(new MenuItem({ label: '20px', click: () => {
+            const { sans } = this.state;
+            const size = 20;
+            writeConfigFile({
+                sans,
+                size
+            });
             this.setState({
                 ...this.state,
-                size: 20
+                size
             });
         }}));
 
@@ -131,17 +210,29 @@ class MarkdownEditor extends Component {
 
         viewMenu.append(new MenuItem({ label: 'Show Preview Window', click: this.openPreviewWindow}));
 
+        const helpMenu = new Menu();
+        helpMenu.append(new MenuItem({ label: 'Keyboard Shortcuts', click: () => {
+            this.openHelp();
+        }}));
+
         if(process.platform === 'darwin') {
+            viewMenu.append(new MenuItem({ type: 'separator' }));
             menu.insert(new MenuItem({ label: 'File', submenu: fileMenu }), 1);
             menu.insert(new MenuItem({ label: 'View', submenu: viewMenu }), 3);
         } else {
             fileMenu.append(new MenuItem({ label: 'Quit', click: () => win.close(true) }), 0);
             menu.append(new MenuItem({ label: 'File', submenu: fileMenu }), 1);
         }
+        menu.append(new MenuItem({ label: 'Help', submenu: helpMenu }));
         nw.Window.get().menu = menu;
         this._menu = menu;
 
         win.on('close', () => {
+            const { changed } = this.state;
+            if(changed) {
+                const confirmed = confirm('Would you like to abandon your unsaved changes?');
+                if(!confirmed) return;
+            }
             if(this.state.preview) {
                 this._previewWindow.close(true);
             }
@@ -168,7 +259,55 @@ class MarkdownEditor extends Component {
             active: this.onNew,
             failed: () => console.log('Oops!')
         }));
+        App.registerGlobalHotKey(new Shortcut({
+            key: process.platform === 'darwin' ? 'Command+=' : 'Ctrl+=',
+            active: () => {
+                const { size, sans } = this.state;
+                if(size < 20) {
+                    const newSize = size + 2;
+                    writeConfigFile({
+                        sans,
+                        size: newSize
+                    });
+                    this.setState({
+                        ...this.state,
+                        size: newSize
+                    });
+                }
+            },
+            failed: () => console.log('Oops!')
+        }));
+        App.registerGlobalHotKey(new Shortcut({
+            key: process.platform === 'darwin' ? 'Command+-' : 'Ctrl+-',
+            active: () => {
+                const { size, sans } = this.state;
+                if(size > 12) {
+                    const newSize = size - 2;
+                    writeConfigFile({
+                        sans,
+                        size: newSize
+                    });
+                    this.setState({
+                        ...this.state,
+                        size: newSize
+                    });
+                }
+            },
+            failed: () => console.log('Oops!')
+        }));
+        App.registerGlobalHotKey(new Shortcut({
+            key: process.platform === 'darwin' ? 'Command+H' : 'Ctrl+H',
+            active: this.openHelp,
+            failed: () => console.log('Oops!')
+        }));
 
+    }
+
+    componentDidMount() {
+        this.textAreaNode.focus();
+        $(this.saveFileInputForm)
+            .find('input')
+            .attr('nwsaveas', `${moment().format('YYYY-MM-DD')}.md`);
     }
 
     onSave() {
@@ -206,15 +345,8 @@ class MarkdownEditor extends Component {
         this.renderPreview('');
     }
 
-    componentDidMount() {
-        this.textAreaNode.focus();
-        $(this.saveFileInputForm)
-            .find('input')
-            .attr('nwsaveas', `${moment().format('YYYY-MM-DD')}.md`);
-    }
-
     openPreviewWindow() {
-        const { converted, preview } = this.state;
+        const { sans, converted, preview } = this.state;
         if(preview) {
             this._previewWindow.focus();
             return;
@@ -226,6 +358,8 @@ class MarkdownEditor extends Component {
                     ...this.state,
                     preview: true
                 });
+                const target = win.window.document.getElementById('js-main');
+                target.style.fontFamily = sans ? sansFont : serifFont;
                 this.renderPreview(converted);
             });
             win.on('close', () => {
@@ -242,7 +376,7 @@ class MarkdownEditor extends Component {
         const previewWindow = this._previewWindow;
         const target = previewWindow.window.document.getElementById('js-main');
         target.innerHTML = converted;
-        previewWindow.scrollTo(0, previewWindow.window.document.body.scrollHeight);
+        previewWindow.window.scrollTo(0, previewWindow.window.document.body.scrollHeight);
     }
 
     onChange(e) {
@@ -305,9 +439,23 @@ class MarkdownEditor extends Component {
         if(preview) this.renderPreview(converted);
     }
 
+    openHelp() {
+        const $target = $('#js-helpModal');
+        $target.modal('show');
+        $target
+            .off('hidden.bs.modal')
+            .on('hidden.bs.modal', () => {
+                this.textAreaNode.focus();
+            });
+    }
+
+    closeHelp() {
+        $('#js-helpModal').modal('hide');
+    }
+
     render() {
         const {
-            serif,
+            sans,
             size,
             text,
             windowHeight
@@ -315,7 +463,7 @@ class MarkdownEditor extends Component {
 
         const styles = {
             textarea: {
-                fontFamily: serif ? 'PT Serif' : 'PT Sans',
+                fontFamily: sans ? sansFont : serifFont,
                 resize: 'none',
                 height: windowHeight,
                 border: 0,
@@ -325,6 +473,8 @@ class MarkdownEditor extends Component {
                 display: 'none'
             }
         };
+
+        const darwin = process.platform === 'darwin';
 
         return (
             <div>
@@ -338,6 +488,55 @@ class MarkdownEditor extends Component {
                     className={'form-control'}
                     value={text}
                     onChange={this.onChange} />
+
+                <div id={'js-helpModal'} className={'modal fade'} tabIndex={'-1'}>
+                    <div className={'modal-dialog'}>
+                        <div className={'modal-content'}>
+                            <div className={'modal-header'}>
+                                <button type={'button'} className={'close'} onClick={this.closeHelp}><span>&times;</span></button>
+                                <h4 className={'modal-title'}>Keyboard Shortcuts</h4>
+                            </div>
+                            <div className={'modal-body'}>
+                                <table className={'table'}>
+                                    <tbody>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + N' : 'Ctrl + N'}</td>
+                                            <td>New</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + O' : 'Ctrl + O'}</td>
+                                            <td>Open</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + S' : 'Ctrl + S'}</td>
+                                            <td>Save/Save As</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + =' : 'Ctrl + ='}</td>
+                                            <td>Increase Font Size</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + -' : 'Ctrl + -'}</td>
+                                            <td>Decrease Font Size</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + P' : 'Ctrl + P'}</td>
+                                            <td>Show Preview Window</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + H' : 'Ctrl + H'}</td>
+                                            <td>Show Help</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className={'modal-footer'}>
+                                <button type={'button'} className={'btn btn-default'} onClick={this.closeHelp}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         );
