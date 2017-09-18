@@ -1,0 +1,19 @@
+{
+  "name": "markdown-editor",
+  "version": "0.1.0",
+  "description": "markdown-editor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rBurgett/markdown-editor.git"
+  },
+  "author": "Ryan Burgett <ryan@burgettweb.net>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/rBurgett/markdown-editor/issues"
+  },
+  "homepage": "https://github.com/rBurgett/markdown-editor#readme"
+}
