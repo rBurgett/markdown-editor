@@ -6,6 +6,13 @@ import moment from 'moment';
 import fs from 'fs-extra';
 import path from 'path';
 
+const handleError = err => {
+    console.error(err);
+    alert(`ERROR! ${err.message}`);
+};
+
+process.on('uncaughtException', handleError);
+
 const { App, Menu, MenuItem, Shell, Shortcut } = nw;
 
 const dataPath = App.dataPath;
@@ -244,28 +251,23 @@ class MarkdownEditor extends Component {
 
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+P' : 'Ctrl+P',
-            active: this.openPreviewWindow,
-            failed: () => console.log('Oops!')
+            active: this.openPreviewWindow
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+S' : 'Ctrl+S',
-            active: this.onSave,
-            failed: () => console.log('Oops!')
+            active: this.onSave
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+O' : 'Ctrl+O',
-            active: this.onOpen,
-            failed: () => console.log('Oops!')
+            active: this.onOpen
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+N' : 'Ctrl+N',
-            active: this.onNew,
-            failed: () => console.log('Oops!')
+            active: this.onNew
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+M' : 'Ctrl+M',
-            active: this.openMarkdownReference,
-            failed: () => console.log('Oops!')
+            active: this.openMarkdownReference
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+=' : 'Ctrl+=',
@@ -282,8 +284,7 @@ class MarkdownEditor extends Component {
                         size: newSize
                     });
                 }
-            },
-            failed: () => console.log('Oops!')
+            }
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+-' : 'Ctrl+-',
@@ -300,13 +301,11 @@ class MarkdownEditor extends Component {
                         size: newSize
                     });
                 }
-            },
-            failed: () => console.log('Oops!')
+            }
         }));
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+H' : 'Ctrl+H',
-            active: this.openHelp,
-            failed: () => console.log('Oops!')
+            active: this.openHelp
         }));
 
     }
