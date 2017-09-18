@@ -6,7 +6,7 @@ import moment from 'moment';
 import fs from 'fs-extra';
 import path from 'path';
 
-const { App, Menu, MenuItem, Shortcut } = nw;
+const { App, Menu, MenuItem, Shell, Shortcut } = nw;
 
 const dataPath = App.dataPath;
 const configFilePath = path.join(dataPath, 'config.json');
@@ -214,6 +214,9 @@ class MarkdownEditor extends Component {
         helpMenu.append(new MenuItem({ label: 'Keyboard Shortcuts', click: () => {
             this.openHelp();
         }}));
+        helpMenu.append(new MenuItem({ label: 'Markdown Reference', click: () => {
+            this.openMarkdownReference();
+        }}));
 
         if(process.platform === 'darwin') {
             viewMenu.append(new MenuItem({ type: 'separator' }));
@@ -257,6 +260,11 @@ class MarkdownEditor extends Component {
         App.registerGlobalHotKey(new Shortcut({
             key: process.platform === 'darwin' ? 'Command+N' : 'Ctrl+N',
             active: this.onNew,
+            failed: () => console.log('Oops!')
+        }));
+        App.registerGlobalHotKey(new Shortcut({
+            key: process.platform === 'darwin' ? 'Command+M' : 'Ctrl+M',
+            active: this.openMarkdownReference,
             failed: () => console.log('Oops!')
         }));
         App.registerGlobalHotKey(new Shortcut({
@@ -453,6 +461,10 @@ class MarkdownEditor extends Component {
         $('#js-helpModal').modal('hide');
     }
 
+    openMarkdownReference() {
+        Shell.openExternal('http://commonmark.org/help/');
+    }
+
     render() {
         const {
             sans,
@@ -525,7 +537,11 @@ class MarkdownEditor extends Component {
                                         </tr>
                                         <tr>
                                             <td>{darwin ? 'Cmd + H' : 'Ctrl + H'}</td>
-                                            <td>Show Help</td>
+                                            <td>Show Keyboard Shortcuts</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{darwin ? 'Cmd + M' : 'Ctrl + M'}</td>
+                                            <td>Open Markdown Reference</td>
                                         </tr>
                                     </tbody>
                                 </table>
