@@ -110,7 +110,7 @@ class MarkdownEditor extends Component {
         const win = nw.Window.get();
 
         const menu = new Menu({ type: 'menubar' });
-        menu.createMacBuiltin('Markdown Editor');
+        if(process.platform === 'darwin') menu.createMacBuiltin('Markdown Editor');
 
         const fileMenu = new Menu();
         fileMenu.append(new MenuItem({ label: 'New', click: this.onNew }));
@@ -238,8 +238,34 @@ class MarkdownEditor extends Component {
             menu.insert(new MenuItem({ label: 'File', submenu: fileMenu }), 1);
             menu.insert(new MenuItem({ label: 'View', submenu: viewMenu }), 3);
         } else {
-            fileMenu.append(new MenuItem({ label: 'Quit', click: () => win.close(true) }), 0);
-            menu.append(new MenuItem({ label: 'File', submenu: fileMenu }), 1);
+            fileMenu.append(new MenuItem({ label: 'Quit', click: () => win.close(true) }));
+            menu.append(new MenuItem({ label: 'File', submenu: fileMenu }));
+
+            const editMenu = new Menu();
+            editMenu.append(new MenuItem({
+                label: 'Undo',
+                click: () => window.document.execCommand('undo')
+            }));
+            editMenu.append(new MenuItem({
+                label: 'Redo',
+                click: () => window.document.execCommand('redo')
+            }));
+            editMenu.append(new MenuItem({ type: 'separator' }));
+            editMenu.append(new MenuItem({
+                label: 'Cut',
+                click: () => window.document.execCommand('cut')
+            }));
+            editMenu.append(new MenuItem({
+                label: 'Copy',
+                click: () => window.document.execCommand('copy')
+            }));
+            editMenu.append(new MenuItem({
+                label: 'Paste',
+                click: () => window.document.execCommand('paste')
+            }));
+
+            menu.append(new MenuItem({ label: 'Edit', submenu: editMenu }));
+            menu.append(new MenuItem({ label: 'View', submenu: viewMenu }));
         }
         menu.append(new MenuItem({ label: 'Help', submenu: helpMenu }));
         nw.Window.get().menu = menu;
