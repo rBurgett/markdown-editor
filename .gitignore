@@ -61,3 +61,5 @@ typings/
 /css/main.css
 /dist/
 /temp
+/cache
+/build

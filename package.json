@@ -13,7 +13,8 @@
     "build": "babel src --out-dir dist",
     "watch": "babel src --watch --out-dir dist",
     "compile-less": "grunt compile-less",
-    "watch-less": "grunt watch"
+    "watch-less": "grunt watch",
+    "build-native": "node ./build-scripts/copy-files && cd temp && npm install --production && cd .. && node ./build-scripts/build"
   },
   "repository": {
     "type": "git",
@@ -30,7 +31,9 @@
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-react": "^6.24.1",
-    "bootstrap": "^3.3.7",
+    "co": "^4.6.0",
+    "co-fs-extra": "^1.2.1",
+    "colors": "^1.1.2",
     "eslint": "^4.7.0",
     "eslint-plugin-react": "^7.3.0",
     "font-awesome": "^4.7.0",
@@ -38,15 +41,17 @@
     "grunt-contrib-less": "^1.4.1",
     "grunt-contrib-watch": "^1.0.0",
     "less-plugin-autoprefix": "^1.5.1",
-    "less-plugin-clean-css": "^1.5.1"
+    "less-plugin-clean-css": "^1.5.1",
+    "nw-builder": "^3.4.1",
+    "rmrf-promise": "^1.1.0"
   },
   "dependencies": {
+    "bootstrap": "^3.3.7",
     "fs-extra": "^4.0.2",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
     "markdown-it": "^8.4.0",
     "moment": "^2.18.1",
-    "promise-alert": "^0.1.1",
     "react": "^15.6.1",
     "react-dom": "^15.6.1"
   }
