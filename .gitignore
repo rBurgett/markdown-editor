@@ -58,4 +58,6 @@ typings/
 .env
 
 .idea
-
+/css/main.css
+/dist/
+/temp

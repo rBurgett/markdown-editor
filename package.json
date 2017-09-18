@@ -2,9 +2,13 @@
   "name": "markdown-editor",
   "version": "0.1.0",
   "description": "markdown-editor",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nw .",
+    "build": "babel src --out-dir dist",
+    "watch": "babel src --watch --out-dir dist",
+    "compile-less": "grunt compile-less",
+    "watch-less": "grunt watch"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,25 @@
   "bugs": {
     "url": "https://github.com/rBurgett/markdown-editor/issues"
   },
-  "homepage": "https://github.com/rBurgett/markdown-editor#readme"
+  "homepage": "https://github.com/rBurgett/markdown-editor#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-react": "^6.24.1",
+    "bootstrap": "^3.3.7",
+    "eslint": "^4.7.0",
+    "eslint-plugin-react": "^7.3.0",
+    "font-awesome": "^4.7.0",
+    "grunt": "^1.0.1",
+    "grunt-contrib-less": "^1.4.1",
+    "grunt-contrib-watch": "^1.0.0",
+    "less-plugin-autoprefix": "^1.5.1",
+    "less-plugin-clean-css": "^1.5.1"
+  },
+  "dependencies": {
+    "promise-alert": "^0.1.1",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
+  }
 }
