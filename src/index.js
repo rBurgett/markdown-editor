@@ -7,10 +7,6 @@ import moment from 'moment';
 import fs from 'fs';
 import path from 'path';
 
-// window.$ = $;
-// const { swal } = require('promise-alert');
-// window.swal = swal;
-
 const { App, Menu, MenuItem, Shortcut } = nw;
 
 const md = new MarkdownIt();
@@ -24,6 +20,11 @@ const countWords = str => {
         .filter(s => s ? true : false)
         .length;
 };
+const makeTitle = (text, filePath, changed) => {
+    const count = countWords(text);
+    const titleBarText = filePath ? `${changed ? '*' : ''}${path.basename(filePath)} - Markdown Editor` : 'Markdown Editor';
+    return `${count === 1 ? `${count} word` : `${count} words`} - ${titleBarText}`;
+};
 
 class MarkdownEditor extends Component {
 
@@ -31,6 +32,7 @@ class MarkdownEditor extends Component {
         super(props);
         this.state = {
             text: '',
+            changed: false,
             count: '',
             converted: '',
             serif: true,
@@ -179,25 +181,26 @@ class MarkdownEditor extends Component {
     }
 
     onOpen() {
-        const { filePath, text } = this.state;
-        if(filePath) {
-            const confirmed = confirm('Would you like to save your changes?');
-            if(confirmed) this.saveFile(filePath, text, true);
+        const { changed } = this.state;
+        if(changed) {
+            const confirmed = confirm('Would you like to abandon your unsaved changes?');
+            if(!confirmed) return;
         }
         $(this.openFileInput)[0].click();
     }
 
     onNew() {
-        const { filePath, text } = this.state;
-        if(filePath) {
-            const confirmed = confirm('Would you like to save your changes?');
-            if(confirmed) this.saveFile(filePath, text, true);
+        const { changed } = this.state;
+        if(changed) {
+            const confirmed = confirm('Would you like to abandon your unsaved changes?');
+            if(!confirmed) return;
         }
         this.setState({
             ...this.state,
             text: '',
             converted: '',
             count: 0,
+            changed: false,
             filePath: ''
         });
         this.renderPreview('');
@@ -244,30 +247,35 @@ class MarkdownEditor extends Component {
 
     onChange(e) {
         e.preventDefault();
-        const { preview } = this.state;
+        const { preview, filePath } = this.state;
         const text = e.target.value;
         const converted = md.render(text);
         const count = countWords(text);
-        document.title = `${count === 1 ? `${count} word` : `${count} words`} - Markdown Editor`;
         this.setState({
             text,
             converted,
-            count
+            count,
+            changed: true
         });
+        document.title = makeTitle(text, filePath, true);
         if(preview) this.renderPreview(converted);
     }
 
-    saveFile(filePath, text, skipAlert) {
+    saveFile(filePath, text) {
         fs.writeFileSync(path.normalize(filePath), text, 'utf8');
-        // swal('Success!', 'File successfully saved', 'success');
-        if(!skipAlert) alert('File successfully saved!');
+        this.setState({
+            ...this.state,
+            changed: false
+        });
+        document.title = makeTitle(text, filePath, false);
     }
 
     onSaveInputChange(e) {
         e.preventDefault();
+        const { text } = this.state;
         const [ file ] = e.target.files;
         const filePath = file.path;
-        this.saveFile(filePath, this.state.text);
+        this.saveFile(filePath, text);
         this.setState({
             ...this.state,
             filePath
@@ -290,8 +298,10 @@ class MarkdownEditor extends Component {
             text,
             converted,
             count,
-            filePath
+            filePath,
+            changed: false
         });
+        document.title = makeTitle(text, filePath, false);
         if(preview) this.renderPreview(converted);
     }
 
