@@ -450,11 +450,11 @@ class MarkdownEditor extends Component {
         const { text } = this.state;
         const [ file ] = e.target.files;
         const filePath = file.path;
-        this.saveFile(filePath, text);
         this.setState({
             ...this.state,
             filePath
         });
+        setTimeout(() => this.saveFile(filePath, text));
     }
 
     onOpenInputChange(e) {
