@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "nw .",
+    "build-complete": "npm install && npm run compile-less && npm run build && npm run build-native",
     "build": "babel src --out-dir dist",
     "watch": "babel src --watch --out-dir dist",
     "compile-less": "grunt compile-less",
