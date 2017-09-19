@@ -63,7 +63,7 @@ class MarkdownEditor extends Component {
         const { argv } = App;
 
         const filePath = argv.length > 0 ? argv[0].replace(/^file:\/\//, '') : '';
-        const text = filePath ? fs.readFileSync(filePath, 'utf8') : '';
+        const text = filePath ? fs.readFileSync(path.normalize(decodeURI(filePath)), 'utf8') : '';
         const converted = text ? md.render(text) : '';
         const count = countWords(text);
         if(filePath) document.title = makeTitle(text, filePath, false);
